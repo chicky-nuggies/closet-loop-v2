@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.vscode/
+*.db
+
+# CLIP model
+/app/model/
+
+/venv/
+
+*.ipynb
