@@ -31,7 +31,7 @@ The backend leverages a pre-trained CLIP model for generating image and text emb
 1.  **Clone the repository:**
 
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/chicky-nuggies/closet-loop-v2.git
     cd closetloop-backend
     ```
 
