@@ -10,3 +10,9 @@ __pycache__/
 /venv/
 
 *.ipynb
+
+tests/
+
+node_modules/
+package-lock.json
+package.json
