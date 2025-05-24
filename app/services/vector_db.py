@@ -95,12 +95,22 @@ class VectorDatabase:
         
         return wardrobe_items
 
-    def get_items_by_category(self, category: str, query_embedding: np.ndarray, limit: int = 5):
+    def get_items_by_category(self, category: str, query_embedding: np.ndarray, limit: int = 5, collection_name: str = None):
         """Get items by category with similarity search"""
         try:
+            if collection_name == None:
+                collection_name = self.collection_name
+
+            if isinstance(query_embedding, np.ndarray):
+                query_vector = query_embedding.tolist()
+            else:
+                query_vector = query_embedding
+
+            
+            
             return self.client.query_points(
-                collection_name=self.collection_name,
-                query=query_embedding.tolist(),
+                collection_name=collection_name,
+                query=query_vector,
                 query_filter=Filter(
                     must=[FieldCondition(key="category", match=MatchValue(value=category))]
                 ),
@@ -126,7 +136,7 @@ class VectorDatabase:
                 collection_name=self.collection_name,
                 ids=[item_id],
                 with_payload=True,
-                with_vectors=False
+                with_vectors=True
             )
             
             if result and len(result) > 0:

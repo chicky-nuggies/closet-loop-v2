@@ -3,7 +3,7 @@ import traceback
 
 from app.services.vector_db import VectorDatabase
 from app.dependencies import get_marketplace_db
-from app.models.schemas import MarketplaceItem
+from app.models.schemas import MarketplaceItem, ClothingItem
 from app.utils.file_utils import save_upload_file
 from app.utils.logging import logger
 
@@ -107,4 +107,55 @@ async def get_item(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}"
         )
+
+@router.get('/get-matching-clothing/{item_id}')
+async def get_matching_item(
+    item_id: str,
+    vector_db: VectorDatabase = Depends(get_marketplace_db)
+):
+    try:
+        item = vector_db.get_items_by_id(item_id)
+
+        if not item:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Item with ID {item_id} not found"
+            )
+        
+        current_category = item.payload.get("category", "").lower()
+        target_category = None
+
+        if current_category == "top":
+            target_category = "bottom"
+        elif current_category == "bottom":
+            target_category = "top"
+
+        logger.info(f"Finding matching {target_category} items for {current_category} item {item_id}")
+
+        matching_items = vector_db.get_items_by_category(target_category, item.vector, limit=3, collection_name='clothes')
+
+        result = []
+        for match_item in matching_items:
+            clothing_item = ClothingItem(
+                id=match_item.id,
+                name=match_item.payload.get("name", "Unnamed Item"),
+                category=match_item.payload.get("category", "uncategorized"),
+                tags=match_item.payload.get("tags", [])
+            )
+            result.append(clothing_item)
+        
+        return {'items': result}
+
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_details = traceback.format_exc()
+        logger.error(f"Error in get_matching_item: {str(e)}\n{error_details}")
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
 
